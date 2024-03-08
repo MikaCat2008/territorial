@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+PointType = tuple[int, int]
 
-class PlayerModelType:
+
+class PlayerType:
     id: int
     name: str
 
     game: GameType
 
 
+class TerritoryType:
+    player: PlayerType
+
+    points: list[PointType]
+
+
 class GameType:
-    players: list[PlayerModelType]
-
-
-class ContextType:
-    game: GameType
+    players: list[PlayerType]
