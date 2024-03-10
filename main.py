@@ -1,8 +1,23 @@
 from api.game import Game
 
-game = Game()
-player0 = game.create_player("Adolf0")
-player1 = game.create_player("Adolf1")
+GAME_SIZE = 10, 10
 
-print(player0.id, player0.name)
-print(player1.id, player1.name)
+game = Game(*GAME_SIZE)
+player = game.create_player("Adolf")
+
+player.spawn((9, 4))
+player.attack()
+
+
+def draw() -> None:
+    s = ""
+    
+    for y in range(GAME_SIZE[1]):
+        for x in range(GAME_SIZE[0]):
+            s += str(game.cells[x, y])
+        s += "\n"
+
+    print(s)
+
+
+draw()

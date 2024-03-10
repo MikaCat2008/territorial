@@ -11,6 +11,19 @@ class Player(PlayerType):
 
         self.game = game
 
+    def spawn(self, point: tuple[int, int]) -> None:
+        self.territory.spawn(*point)
+
+    def attack(self, target: PlayerType = None) -> None:
+        new_cells, excess_cells = self.territory.get_occupatable_cells(target)
+
+        print(new_cells)
+        print(excess_cells)
+
+        # ...
+
+        # self.territory.occupate(cells)
+
     @classmethod
     def create(cls, name: str, game: GameType = None) -> PlayerType:
         if game is None:

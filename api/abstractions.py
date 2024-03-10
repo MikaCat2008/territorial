@@ -1,20 +1,32 @@
 from __future__ import annotations
 
-PointType = tuple[int, int]
-
 
 class PlayerType:
     id: int
     name: str
+    territory: TerritoryType
 
     game: GameType
+
+
+class CellType:
+    x: int
+    y: int
+
+    type: int
+    territory: TerritoryType
 
 
 class TerritoryType:
     player: PlayerType
 
-    points: list[PointType]
+    cells: list[CellType]
+
+
+class CellsMapType:
+    cells: list[list[CellType]]
 
 
 class GameType:
+    cells: CellsMapType
     players: list[PlayerType]
