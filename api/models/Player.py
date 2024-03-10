@@ -4,7 +4,7 @@ from .Territory import Territory
 
 
 class Player(PlayerType):
-    def __init__(self, id: int, name: str, color: str, game: GameType) -> None:
+    def __init__(self, id: int, name: str, color: tuple[int, int, int], game: GameType) -> None:
         self.id = id
         self.name = name
         self.color = color
@@ -34,7 +34,7 @@ class Player(PlayerType):
             self.occupate(target)
 
     @classmethod
-    def create(cls, name: str, color: str, game: GameType = None) -> PlayerType:
+    def create(cls, name: str, color: tuple[int, int, int], game: GameType = None) -> PlayerType:
         if game is None:
             return Player(None, name, color)
         

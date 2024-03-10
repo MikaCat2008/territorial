@@ -4,7 +4,7 @@ from __future__ import annotations
 class PlayerType:
     id: int
     name: str
-    color: str
+    color: tuple[int, int, int]
     territory: TerritoryType
 
     game: GameType

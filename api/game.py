@@ -22,5 +22,5 @@ class Game(GameType):
         self.cells = CellsMap(w, h)
         self.players = []
 
-    def create_player(self, name: str, color: str) -> Player:
+    def create_player(self, name: str, color: tuple[int, int, int]) -> Player:
         return Player.create(name, color, self)
