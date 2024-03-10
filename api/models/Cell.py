@@ -1,7 +1,7 @@
 from api.abstractions import CellType, TerritoryType
 
 FREE_CELL = 0
-UNREACHEBLE_CELL = 1
+UNREACHABLE_CELL = 1
 PLAYER_BORDER_CELL = 2
 PLAYER_TERRITORY_CELL = 3
 
@@ -13,11 +13,18 @@ class Cell(CellType):
         self.type = type
         self.territory = territory
 
-    def is_excess(self) -> bool:
+    def is_excess(self, is_target: bool) -> bool:
         for cell in self.get_cells_around():
-            if (cell.type == PLAYER_BORDER_CELL and cell.territory is not self.territory) \
-                or cell.type == UNREACHEBLE_CELL:
-                return False
+            is_enemy_cell = cell.type == PLAYER_BORDER_CELL and cell.territory is not self.territory
+            is_unreachable_cell = cell.type == UNREACHABLE_CELL
+            is_free_cell = cell.type == FREE_CELL
+
+            if is_target:
+                if is_unreachable_cell or is_free_cell:
+                    return False
+            else:
+                if is_enemy_cell or is_unreachable_cell:
+                    return False
         return True
 
     def get_cells_around(self) -> list[CellType]:
@@ -35,7 +42,7 @@ class Cell(CellType):
     def __str__(self) -> str:
         if self.type == FREE_CELL:
             return " "
-        elif self.type == UNREACHEBLE_CELL:
+        elif self.type == UNREACHABLE_CELL:
             return "X"
         elif self.type == PLAYER_BORDER_CELL:
             return "@"

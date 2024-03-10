@@ -1,5 +1,6 @@
 from api.abstractions import CellType, PlayerType, TerritoryType
-from api.cell import FREE_CELL, PLAYER_BORDER_CELL, PLAYER_TERRITORY_CELL
+
+from .Cell import FREE_CELL, PLAYER_BORDER_CELL, PLAYER_TERRITORY_CELL
 
 
 class Territory(TerritoryType):
@@ -40,19 +41,26 @@ class Territory(TerritoryType):
 
     def get_free_cells_around(self) -> list[CellType]:
         cells = self.get_cells_around()
+        
+        return [cell for cell in cells if cell.type == FREE_CELL]
 
-        return list(filter(lambda c: c.type == FREE_CELL, cells))
+    def get_target_cells(self, target: TerritoryType) -> list[CellType]:
+        cells = self.get_cells_around()
 
-    def get_occupatable_cells(self, target: PlayerType = None) -> tuple[list[CellType], list[CellType]]:
+        return [cell for cell in cells if cell.territory is target]
+
+    def get_occupatable_cells(self, target: TerritoryType = None) -> tuple[list[CellType], list[CellType]]:
+        excess_cells = []
+        is_target = False
+        
         if target is None:
             new_cells = self.get_free_cells_around()
         else:
-            ...
-
-        excess_cells = []
+            is_target = True
+            new_cells = self.get_target_cells(target)
 
         for cell in self.cells:
-            if cell.is_excess():
+            if cell.is_excess(is_target):
                 excess_cells.append(cell)
 
         return new_cells, excess_cells
@@ -74,6 +82,22 @@ class Territory(TerritoryType):
                     self.remove_cell(x, y)
                 elif cell.type == PLAYER_TERRITORY_CELL and cell.territory is self:
                     self.player.game.cells[x, y].type = FREE_CELL
+
+    def remove(self, cells: list[CellType]) -> None:        
+        for cell in cells:
+            _cells = cell.get_cells_around()
+
+            for _cell in _cells:
+                if _cell.type == PLAYER_TERRITORY_CELL and _cell.territory is self:
+                    x = _cell.x
+                    y = _cell.y
+                    
+                    self.set_border_cell(x, y)
+
+            x = cell.x
+            y = cell.y
+
+            self.remove_cell(x, y)
 
     def spawn(self, x: int, y: int) -> None:
         self.set_border_cell(x, y)

@@ -1,6 +1,5 @@
 from api.abstractions import CellType, GameType, CellsMapType
-from api.cell import Cell, FREE_CELL, UNREACHEBLE_CELL
-from api.models import Player
+from api.models import Cell, Player, FREE_CELL, UNREACHABLE_CELL
 
 
 class CellsMap(CellsMapType):
@@ -13,7 +12,7 @@ class CellsMap(CellsMapType):
         x, y = point
 
         if x < 0 or x >= self.w or y < 0 or y >= self.h:
-            return Cell(x, y, UNREACHEBLE_CELL)
+            return Cell(x, y, UNREACHABLE_CELL)
 
         return self.cells[y][x]
 
@@ -23,5 +22,5 @@ class Game(GameType):
         self.cells = CellsMap(w, h)
         self.players = []
 
-    def create_player(self, name: str) -> Player:
-        return Player.create(name, self)
+    def create_player(self, name: str, color: str) -> Player:
+        return Player.create(name, color, self)

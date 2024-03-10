@@ -4,6 +4,7 @@ from __future__ import annotations
 class PlayerType:
     id: int
     name: str
+    color: str
     territory: TerritoryType
 
     game: GameType
