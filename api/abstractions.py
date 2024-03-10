@@ -20,7 +20,7 @@ class CellType:
 class TerritoryType:
     player: PlayerType
 
-    cells: list[CellType]
+    cells: set[CellType]
 
 
 class CellsMapType:

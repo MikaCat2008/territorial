@@ -17,12 +17,11 @@ class Player(PlayerType):
     def attack(self, target: PlayerType = None) -> None:
         new_cells, excess_cells = self.territory.get_occupatable_cells(target)
 
-        print(new_cells)
-        print(excess_cells)
-
         # ...
 
-        # self.territory.occupate(cells)
+        # print(len(new_cells))
+
+        self.territory.occupate(new_cells, excess_cells)
 
     @classmethod
     def create(cls, name: str, game: GameType = None) -> PlayerType:
