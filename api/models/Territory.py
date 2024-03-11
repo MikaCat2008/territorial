@@ -20,7 +20,9 @@ class Territory(TerritoryType):
         cell = self.player.game.cells[x, y]
 
         cell.type = PLAYER_TERRITORY_CELL
-        self.cells.remove(cell)
+
+        if cell in self.cells:
+            self.cells.remove(cell)
 
     def remove_cell(self, x: int, y: int) -> None:
         cell = self.player.game.cells[x, y]
@@ -51,16 +53,14 @@ class Territory(TerritoryType):
 
     def get_occupatable_cells(self, target: TerritoryType = None) -> tuple[list[CellType], list[CellType]]:
         excess_cells = []
-        is_target = False
         
         if target is None:
             new_cells = self.get_free_cells_around()
         else:
-            is_target = True
             new_cells = self.get_target_cells(target)
 
         for cell in self.cells:
-            if cell.is_excess(is_target):
+            if cell.is_excess(target):
                 excess_cells.append(cell)
 
         return new_cells, excess_cells
@@ -106,6 +106,12 @@ class Territory(TerritoryType):
         for new_cell in new_cells:
             x = new_cell.x
             y = new_cell.y
+            new_cell.territory = self
+
+            if new_cell.is_inside_territory():
+                self.set_territory_cell(x, y)
+                
+                continue
             
             self.set_border_cell(x, y)
 

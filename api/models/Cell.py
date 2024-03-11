@@ -13,19 +13,28 @@ class Cell(CellType):
         self.type = type
         self.territory = territory
 
-    def is_excess(self, is_target: bool) -> bool:
+    def is_excess(self, target: TerritoryType = None) -> bool:
         for cell in self.get_cells_around():
-            is_enemy_cell = cell.type == PLAYER_BORDER_CELL and cell.territory is not self.territory
-            is_unreachable_cell = cell.type == UNREACHABLE_CELL
             is_free_cell = cell.type == FREE_CELL
+            is_enemy_cell = cell.type == PLAYER_BORDER_CELL and cell.territory is not self.territory
+            is_target_cell = (is_enemy_cell and cell.territory is not target)
+            is_unreachable_cell = cell.type == UNREACHABLE_CELL
 
-            if is_target:
-                if is_unreachable_cell or is_free_cell:
+            if target:
+                if is_unreachable_cell or is_free_cell or is_target_cell:
                     return False
             else:
                 if is_enemy_cell or is_unreachable_cell:
                     return False
         return True
+    
+    def is_inside_territory(self) -> bool:
+        cells = self.get_cells_around()
+        
+        return all(
+            cell.type in (PLAYER_BORDER_CELL, PLAYER_TERRITORY_CELL) and cell.territory is self.territory
+            for cell in cells
+        )
 
     def get_cells_around(self) -> list[CellType]:
         x = self.x
