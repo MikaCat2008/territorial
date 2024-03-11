@@ -10,24 +10,22 @@ class PlayerType:
     game: GameType
 
 
-class CellType:
-    x: int
-    y: int
-
-    type: int
+class ProvinceType:
     territory: TerritoryType
+    is_capital: bool
+
+    contour_points: set[tuple[int, int]]
 
 
 class TerritoryType:
     player: PlayerType
 
-    cells: set[CellType]
+    provinces: set[ProvinceType]
 
 
-class CellsMapType:
-    cells: list[list[CellType]]
-
-
-class GameType:
-    cells: CellsMapType
+class GameType: 
+    w: int
+    h: int
     players: list[PlayerType]
+
+    free_points: set[tuple[int, int]]
