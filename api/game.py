@@ -1,17 +1,32 @@
-from api.abstractions import GameType
-from api.models import Player
+from api.abstractions import CellType, GameType, PlayerType
+from api.models import Cell, Player, Province
 
 
 class Game(GameType):
+    UNREACHABLE_PROVINCE = Province(None)
+
     def __init__(self, w: int, h: int) -> None:
         self.w = w
         self.h = h
         self.players = []
 
-        self.free_points = set([(x, y) for y in range(h) for x in range(w)])
+        self.cells = {}
 
-    def filter_free(self, points: list[tuple[int, int]]) -> list[tuple[int, int]]:
-        return points & self.free_points
+    def add_cell(self, cell: CellType) -> CellType:
+        self.cells[cell.position] = cell
 
-    def create_player(self, name: str, color: tuple[int, int, int]) -> Player:
+        return cell
+
+    def get_cell(self, position: tuple[int, int]) -> CellType:
+        if position in self.cells:
+            return self.cells[position]
+        
+        x, y = position
+
+        if x < 0 or y < 0 or x >= self.w or y >= self.h:
+            return Cell(position, self.UNREACHABLE_PROVINCE)
+        else:
+            return self.add_cell(Cell(position, None))
+
+    def create_player(self, name: str, color: tuple[int, int, int]) -> PlayerType:
         return Player.create(name, color, self)

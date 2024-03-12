@@ -9,9 +9,9 @@ class Territory(TerritoryType):
 
         self.provinces = set()
 
-    def create_province(self, point: tuple[int, int], is_capital: bool) -> ProvinceType:
-        province = Province(self, is_capital)
-        province.add_point(point)
+    def create_province(self, position: tuple[int, int]) -> ProvinceType:
+        province = Province(self)
+        province.add_cell(position)
 
         self.provinces.add(province)
 

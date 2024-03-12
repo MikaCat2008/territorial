@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 
+class CellType:
+    position: tuple[int, int]
+    province: ProvinceType
+
+
 class PlayerType:
     id: int
     name: str
@@ -11,10 +16,10 @@ class PlayerType:
 
 
 class ProvinceType:
+    area: int
     territory: TerritoryType
-    is_capital: bool
 
-    contour_points: set[tuple[int, int]]
+    contour_cells: set[CellType]
 
 
 class TerritoryType:
@@ -28,4 +33,4 @@ class GameType:
     h: int
     players: list[PlayerType]
 
-    free_points: set[tuple[int, int]]
+    cells: dict[tuple[int, int], CellType]

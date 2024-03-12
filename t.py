@@ -1,49 +1,59 @@
-CELL_PATH = ((0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, -1), (-1, 1))
+CELL_PATH = ((0, 0), (0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, -1), (-1, 1))
 
 
-def sort_cells(cells: list[tuple[int, int]]) -> list[tuple[int, int]]:
+def distance(position1: tuple[int, int], position2: tuple[int, int]) -> float:
+    x1, y1 = position1
+    x2, y2 = position2
+
+    return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+
+
+def sort_positions(positions: list[tuple[int, int]]) -> list[tuple[int, int]]:
     i = 0
-    cells_set = set(cells)
-    next_cell = cells[0]
-    alt_cell = None
-    sorted_cells = [None] * len(cells)
+    positions_set = set(positions)
+    next_position = positions[0]
+    last_position = next_position
+    alt_positions = set()
+    sorted_positions = [None] * len(positions)
 
-    while cells_set:
-        if next_cell is None:
+    while positions_set:
+        if next_position is None:
             i += 1
-            next_cell = alt_cell
-            alt_cell = None
 
-        cells_set.remove(next_cell)
-        sorted_cells[i] = next_cell
+            while not next_position:
+                next_position = min(alt_positions, key=lambda p: distance(last_position, p))
 
-        x, y = next_cell
-        next_cell = None
+                alt_positions.remove(next_position)
 
-        for ox, oy in CELL_PATH:            
-            cell = x + ox, y + oy
-            
-            if cell in cells_set:
-                if next_cell:
-                    alt_cell = cell
+                if next_position not in positions_set:
+                    next_position = None
 
-                    continue
+        positions_set.remove(next_position)
+        sorted_positions[i] = next_position
 
-                i += 1
-                next_cell = cell
+        x, y = next_position
+        last_position = next_position
+        next_position = None
 
-    return sorted_cells
+        for ox, oy in CELL_PATH:
+            position = x + ox, y + oy
+
+            if position in positions_set:
+                if next_position:
+                    alt_positions.add(position)
+                else:
+                    i += 1
+                    next_position = position
+
+    return sorted_positions
 
 
-print(sort_cells([
-    (3, 8), (5, 0), (9, 7), (8, 8), 
-    (0, 5), (9, 4), (4, 1), (4, 9), 
-    (6, 1), (7, 9), (1, 6), (10, 5), 
-    (3, 2), (11, 5), (5, 10), (7, 2), 
-    (6, 10), (2, 3), (10, 6), (2, 7), 
-    (8, 3), (1, 4)
+r1 = sort_positions([
+    (1, 0), (5, 0), (1, 4), 
+    (2, 0), (0, 1), (0, 2), 
+    (0, 0), (4, 1), (0, 3), 
+    (3, 2), (4, 0), (3, 0), 
+    (2, 3), (0, 5), (0, 4)
+])
 
-    # (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (1, 2), (0, 2), (0, 1)
-
-    # (0, 0), (1, 1), (2, 1), (1, 2), (0, 3)
-]))
+print(r1)

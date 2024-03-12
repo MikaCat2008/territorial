@@ -1,4 +1,4 @@
-from api.abstractions import GameType, PlayerType
+from api.abstractions import GameType, PlayerType, ProvinceType
 
 from .Territory import Territory
 
@@ -12,8 +12,13 @@ class Player(PlayerType):
 
         self.game = game
 
-    def set_capital(self, point: tuple[int, int]) -> None:
-        return self.territory.create_province(point, True)
+    def set_capital(self, position: tuple[int, int], size: int) -> ProvinceType:
+        capital = self.territory.create_province(position)
+
+        for _ in range(size):
+            capital.expand(capital.get_expand_cells())
+        
+        return capital
 
     @classmethod
     def create(cls, name: str, color: tuple[int, int, int], game: GameType = None) -> PlayerType:
