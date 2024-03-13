@@ -12,8 +12,8 @@ class Player(PlayerType):
 
         self.game = game
 
-    def set_capital(self, position: tuple[int, int], size: int) -> ProvinceType:
-        capital = self.territory.create_province(position)
+    def set_capital(self, position: tuple[int, int], size: int) -> ProvinceType:        
+        capital = self.territory.create_province({self.game.get_cell(position)})
 
         for _ in range(size):
             capital.expand(capital.get_expand_cells())

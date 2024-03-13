@@ -1,4 +1,4 @@
-import time as t, collections as c
+import math as m, time as t, collections as c
 
 import pygame as pg
 
@@ -8,7 +8,7 @@ from api.game import Game
 WIDTH, HEIGHT = 200, 100
 CELL = 5
 EXPAND_SIZE = 100
-PROVINCE_AREA = 500
+PROVINCE_AREA = 300
 
 
 def get_cell_by_mouse_pos() -> CellType:
@@ -50,17 +50,17 @@ def to_int(color: tuple[int, int, int]) -> int:
     return r * 256 * 256 + g * 256 + b
 
 
-def draw_territories(selected_province: ProvinceType) -> None:
+def draw_territories() -> None:
     surface = pg.Surface((WIDTH, HEIGHT))
     surface.fill((255, 255, 255))
 
     pixel_array = pg.PixelArray(surface)
 
     for player in game.players:
-        color = player.color
-
         for province in player.territory.provinces:
-            if province is selected_province:
+            color = player.color
+            
+            if province is attack_province:
                 color = color_mod(color, 20)
 
             contour_positions = set(cell.position for cell in province.contour_cells)
@@ -76,15 +76,15 @@ def draw_territories(selected_province: ProvinceType) -> None:
     screen.blit(pg.transform.scale_by(surface, CELL), (0, 0))
 
 
-def expand(province: ProvinceType, repeat: int) -> None:
-    expands.append([province for _ in range(repeat)])
+def expand(province: ProvinceType, direction: tuple[int, int], repeat: int) -> None:
+    expands.append([(direction, province) for _ in range(repeat)])
 
 
 def process_expands() -> None:
     global expands, expanding_belt
     
     for provinces in expands:
-        province = provinces[0]
+        direction, province = provinces[-1]
 
         cells = expanding_belt.get(province, set())
 
@@ -92,7 +92,7 @@ def process_expands() -> None:
             area = province.area
             free_area = PROVINCE_AREA - area
 
-            expand_cells = province.get_expand_cells()
+            expand_cells = province.get_expand_cells(direction)
 
             if free_area > len(expand_cells):
                 expanding_belt[province] |= expand_cells
@@ -124,38 +124,102 @@ def process_expands() -> None:
     expanding_belt = new_expanding_belt
 
 
+def get_angle(position1: tuple[int, int], position2: tuple[int, int]) -> float:
+    x1, y1 = position1
+    x2, y2 = position2
+
+    a_r = m.atan2(y2 - y1, x2 - x1)
+    a_r = a_r * 180 / m.pi + 90
+    
+    if a_r > 180:
+        a_r = a_r - 360
+
+    return a_r
+
+
+def get_direction(province: ProvinceType, cell: CellType) -> None:
+    position1 = province.get_center_position()
+    position2 = cell.position
+
+    angle = get_angle(position1, position2)
+
+    if -25.5 < angle <= 25.5:
+        direction = (0, -1)
+    elif 25.5 < angle <= 67.5:
+        direction = (1, -1)
+    elif 67.5 < angle <= 112.5:
+        direction = (1, 0)
+    elif 112.5 < angle <= 157.5:
+        direction = (1, 1)
+    elif 157.5 < angle or angle <= -157.5:
+        direction = (0, 1)
+    elif -157.5 < angle <= -112.5:
+        direction = (-1, 1)
+    elif -112.5 < angle <= -67.5:
+        direction = (-1, 0)
+    elif -67.5 < angle <= -25.5:
+        direction = (-1, -1)
+
+    return direction
+
+
+def extend(province: ProvinceType, direction: tuple[int, int], size: int) -> None:
+    province.extend(direction, size)
+
+
 def main() -> None:
-    province = None
+    global attack_province, target_province
 
     while 1:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 exit()
+
+            # elif event.type == pg.MOUSEMOTION:
+            #     cell = get_cell_by_mouse_pos()
+
+            #     if attack_province:
+            #         print(get_angle(attack_province.get_center_position(), cell.position))
+
             elif event.type == pg.MOUSEBUTTONDOWN:
-                cell = get_cell_by_mouse_pos()
+                button = event.button
 
-                if province is None:
-                    if cell.province is not None:
-                        province = cell.province
-                elif cell.province is not province:
-                    target = None
+                if button == 1:
+                    cell = get_cell_by_mouse_pos()
 
-                    if cell.province:
-                        target = cell.province
+                    if cell.province is None:
+                        continue
+                    if cell.province is attack_province:
+                        attack_province = None
 
-                    button = event.button
+                        continue
 
-                    if target is None:
-                        if button == 1:
-                            expand(province, 1)
-                        elif button == 3:
-                            expand(province, 5)
-                else:
-                    province = None
+                    attack_province = cell.province
+
+            elif event.type == pg.MOUSEBUTTONUP:
+                button = event.button
+
+                if button == 1:
+                    cell = get_cell_by_mouse_pos()
+
+                    if attack_province and cell.province is None:
+                        direction = get_direction(attack_province, cell)
+                        
+                        if attack_province.area < PROVINCE_AREA:
+                            expand(attack_province, direction, 5)
+                        else:
+                            extend(attack_province, direction, 5)
+
+                        attack_province = None
+
+                        continue
 
         process_expands()        
+        draw_territories()
 
-        draw_territories(province)
+        if attack_province:
+            x, y = attack_province.get_center_position()
+            pg.draw.rect(screen, (0, 0, 0), (x * CELL, y * CELL, CELL, CELL))
 
         pg.display.flip()
         pg.display.set_caption(f"{int(clock.get_fps())} fps")
@@ -171,8 +235,11 @@ if __name__ == "__main__":
     expands = []
     expanding_belt = c.defaultdict(set)
 
+    attack_province = None
+    target_province = None
+
     player1 = game.create_player("", (200, 0, 0))
-    capital1 = player1.set_capital((WIDTH // 2, HEIGHT // 2), 5)    
+    capital1 = player1.set_capital((WIDTH // 2, HEIGHT // 2), 5)
 
     player2 = game.create_player("", (0, 200, 0))
     capital2 = player2.set_capital((WIDTH // 2 - WIDTH // 4, HEIGHT // 2 - HEIGHT // 4), 5)  
