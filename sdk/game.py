@@ -1,9 +1,11 @@
-from api.abstractions import CellType, GameType, PlayerType
-from api.models import Cell, Player, Province
+from sdk.abstractions import CellType, GameType, PlayerType
+from sdk.cell import Cell
+from sdk.player import Player
+from sdk.territory import Territory
 
 
 class Game(GameType):
-    UNREACHABLE_PROVINCE = Province(None)
+    UNREACHABLE_TERRITORY = Territory(None)
 
     def __init__(self, w: int, h: int) -> None:
         self.w = w
@@ -24,7 +26,7 @@ class Game(GameType):
         x, y = position
 
         if x < 0 or y < 0 or x >= self.w or y >= self.h:
-            return Cell(position, self.UNREACHABLE_PROVINCE)
+            return Cell(position, self.UNREACHABLE_TERRITORY)
         else:
             return self.add_cell(Cell(position, None))
 
