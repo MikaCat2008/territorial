@@ -1,93 +1,134 @@
-from sdk.abstractions import PlayerType, CellType, TerritoryType
+from sdk.abstractions import PlayerType, TerritoryType
 
-
-def get_neighboards(cell: CellType) -> set[CellType]:
-    return set((cell.add(0, 1), cell.add(1, 0), cell.add(0, -1), cell.add(-1, 0)))
+FREE_TERRITORY = -1
+UNREACHABLE_TERRITORY = -2
 
 
 class Territory(TerritoryType):
-    def __init__(self, player: PlayerType) -> None:
+    def __init__(self, id: int, player: PlayerType) -> None:
+        self.id = id
         self.area = 0
         self.contour_cells = set()
 
-        self.target0 = None
-        self.attacker = None
-
         self.player = player
-    
-    def get_cell(self, position: tuple[int, int]) -> CellType:
+
+    def get_cell(self, position: tuple[int, int]) -> int:
         return self.player.game.get_cell(position)
 
+    def set_cell(self, position: tuple[int, int]) -> None:
+        x, y = position
+        
+        self.player.game.cells[y][x] = self.id
+
     def add_cell(self, position: tuple[int, int]) -> None:
-        cell = self.get_cell(position)
-
-        cell.territory = self
-        
         self.area += 1
-        self.contour_cells.add(cell)
-
-    def get_expand_cells(self) -> set[CellType]:
-        cells = set()
-        
-        for cell in self.contour_cells:
-            for neighboard in get_neighboards(cell):
-                if neighboard.is_free():
-                    cells.add(neighboard)
-
-        return cells
+        self.set_cell(position)
+        self.contour_cells.add(position)
     
-    def get_occupate_cells(self, target: TerritoryType) -> set[CellType]:
+    def get_neighbour_cells(self, position: tuple[int, int]) -> list[tuple[int, int]]:
+        x, y = position
+        
+        return ((x, y + 1), (x + 1, y), (x, y - 1), (x - 1, y))
+
+    def get_expansion_cells(self, target: TerritoryType = None) -> set[tuple[int, int]]:
         cells = set()
         
         for cell in self.contour_cells:
-            for neighboard in get_neighboards(cell):
-                if neighboard.territory is target:
-                    cells.add(neighboard)
+            for position in self.get_neighbour_cells(cell):
+                if position in cells:
+                    continue
+
+                neighbour = self.get_cell(position)
+
+                if target is None:
+                    if neighbour == FREE_TERRITORY:
+                        cells.add(position)
+                else:
+                    if neighbour == target.id:
+                        cells.add(position)
 
         return cells
 
-    def clear_excess(self) -> set[CellType]:
+    def clear_excess(self, expand_cells: set[tuple[int, int]]) -> set[tuple[int, int]]:
         excess_cells = set()
+        passed_cells = set()
 
-        for cell in self.contour_cells:
-            is_excess = True
+        if len(expand_cells) * 4 < len(self.contour_cells):
+            for cell in expand_cells:
+                for position in self.get_neighbour_cells(cell):
+                    if position in excess_cells:
+                        continue
 
-            for neighboard in get_neighboards(cell):
-                if neighboard.territory is not self:
-                    is_excess = False
+                    neighbour = self.get_cell(position)
 
-            if is_excess:
-                excess_cells.add(cell)
+                    if neighbour != self.id:
+                        continue
+
+                    for _position in self.get_neighbour_cells(position):
+                        if _position in passed_cells:
+                            continue
+
+                        _neighbour = self.get_cell(_position)
+                        passed_cells.add(_neighbour)
+
+                        if _neighbour != self.id:
+                            break
+
+                    else:
+                        excess_cells.add(position)
+        else:
+            for cell in self.contour_cells:
+                for position in self.get_neighbour_cells(cell):
+                    if position in passed_cells:
+                        continue
+                    
+                    neighbour = self.get_cell(position)
+                    passed_cells.add(position)
+
+                    if neighbour != self.id:
+                        break
+                else:
+                    excess_cells.add(cell)
 
         self.contour_cells -= excess_cells
 
         return excess_cells
     
-    def fix_contour(self, reduce_cells: set[CellType]) -> set[CellType]:
+    def fix_contour(self, reduce_cells: set[tuple[int, int]]) -> set[tuple[int, int]]:
         contour_cells = set()
 
         for cell in reduce_cells:
-            for neighboard in get_neighboards(cell):
-                if neighboard.territory is self and neighboard not in self.contour_cells:
-                    contour_cells.add(neighboard)
+            for neighbour, position in self.get_neighbour_cells(cell):
+                if neighbour == self.id and position not in self.contour_cells:
+                    contour_cells.add(position)
 
         self.contour_cells |= contour_cells
 
         return contour_cells
 
-    def expand(self, expand_cells: set[CellType]) -> set[CellType]:
+    def expand(self, expand_cells: set[tuple[int, int]]) -> set[tuple[int, int]]:
         self.area += len(expand_cells)
         self.contour_cells |= expand_cells
         
         for cell in expand_cells:
-            cell.territory = self
+            self.set_cell(cell)
 
-        return self.clear_excess()
-    
-    def reduce(self, reduce_cells: set[CellType]) -> set[CellType]:        
+        return self.clear_excess(expand_cells)
+
+    def reduce(self, reduce_cells: set[tuple[int, int]]) -> set[tuple[int, int]]:        
         fixed_contour = self.fix_contour(reduce_cells)
         
         self.area -= len(reduce_cells)
         self.contour_cells -= reduce_cells
 
         return fixed_contour
+
+    @classmethod
+    def create(cls, player: PlayerType) -> TerritoryType:
+        if player is None:
+            return Territory(None)
+        
+        id = player.id
+        territory = Territory(id, player)
+
+        return territory

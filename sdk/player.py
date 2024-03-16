@@ -7,7 +7,7 @@ class Player(PlayerType):
         self.id = id
         self.name = name
         self.color = color
-        self.territory = Territory(self)
+        self.territory = Territory.create(self)
 
         self.game = game
 
@@ -21,6 +21,6 @@ class Player(PlayerType):
         id = len(players)
         player = Player(id, name, color, game)
 
-        players.append(player)
+        players[id] = player
 
         return player

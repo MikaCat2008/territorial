@@ -1,11 +1,6 @@
 from __future__ import annotations
 
 
-class CellType:
-    position: tuple[int, int]
-    territory: TerritoryType
-
-
 class PlayerType:
     id: int
     name: str
@@ -16,6 +11,7 @@ class PlayerType:
 
 
 class TerritoryType:
+    id: int
     player: PlayerType
 
     contour_cells: set[TerritoryType]
@@ -24,6 +20,6 @@ class TerritoryType:
 class GameType: 
     w: int
     h: int
-    players: list[PlayerType]
 
-    cells: dict[tuple[int, int], CellType]
+    cells: list[list[int]]
+    players: dict[int, PlayerType]
